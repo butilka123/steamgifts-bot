@@ -12,6 +12,6 @@ Pre-requirements:
 
 > npm install
 
-# Starting with live-server
+### Starting with live-server
 
 > npm run dev
