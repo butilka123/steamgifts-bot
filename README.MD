@@ -1,6 +1,6 @@
 # About this bot
 
-This bot is forked from https://github.com/stilManiac/steamgifts-bot. It's a bot for https://www.steamgifts.com/. This bot automatically enters the giveaways on the website for you.
+This bot is a web scraper for https://www.steamgifts.com/. The Idea came originaly from https://github.com/stilManiac/steamgifts-bot. This bot automatically enters the giveaways on the website for you.
 
 I'm doing this bot in Typescript because I'm familiar with it, and also because JavaScript is used for websites. I'm using the code from the forked repository as an inspiration.
 
@@ -14,6 +14,6 @@ Pre-requirements:
 
 > npm install
 
-# Creating JavaScript executable
+# Starting with live-server
 
-> tsc bot.ts
+> npm run dev
