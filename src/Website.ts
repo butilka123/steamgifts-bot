@@ -1,38 +1,16 @@
-import axios from "axios";
-import * as fs from "fs";
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 
 export class Website {
-  url: string = "";
   axiosInstance = axios.create();
 
-  ownCookie: string = "";
-
-  config = {};
-
-  setUrl() {
-    this.url = "https://www.steamgifts.com/";
-  }
-
-  setCookie() {
-    this.ownCookie = fs.readFileSync("./src/cookie.txt", "utf-8");
-  }
-
-  setConfig() {
-    this.config = {
-      url: this.url,
-      method: "get",
-      headers: {
-        Cookie: `PHPSESSID=${this.ownCookie}`,
-      },
-    };
-  }
-
-  getPage() {
-    this.axiosInstance
-      .request(this.config)
-      .then((response) => {
-        return response.data;
+  getPage(config: AxiosRequestConfig): Promise<AxiosResponse<any, any>> {
+    return this.axiosInstance
+      .request(config)
+      .then((response: AxiosResponse) => {
+        return response;
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        throw error;
+      });
   }
 }

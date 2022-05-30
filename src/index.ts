@@ -1,3 +1,3 @@
-import { Website } from "../src/Website";
+import { SteamgiftsBot } from "../src/SteamgiftsBot";
 
-let bot = new Website();
+new SteamgiftsBot();
