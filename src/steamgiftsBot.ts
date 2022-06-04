@@ -46,14 +46,17 @@ export class SteamgiftsBot {
         "https://www.steamgifts.com/giveaways/search?page=" + this.currentPage
       );
 
-      console.log("Processing games from Page " + this.currentPage);
-
       const $ = cheerio.load(this.html);
-
+      const gameList = $(".giveaway__row-inner-wrap");
       const points: number = Number($(".nav__points").text());
       this.xsrf_token = $('[name="xsrf_token"]').val();
 
-      const gameList = $(".giveaway__row-inner-wrap");
+      console.log(
+        new Date().toLocaleString() +
+          " - " +
+          "Processing games from Page " +
+          this.currentPage
+      );
 
       for (let game of gameList) {
         const gameCost: number = Number(
@@ -73,32 +76,44 @@ export class SteamgiftsBot {
           .attr("href")
           .split("/")[2];
 
-        if (points - gameCost < 0) {
+        const isEntered: boolean = $(game).hasClass("is-faded");
+
+        if (points - gameCost < 0 && !isEntered) {
+          await this.enterGiveaway;
+
+          await new Promise((resolve) => setTimeout(resolve, 1000 * 2)); // Console log wrong for some reason
           console.log(
-            "Not enough Points to enter the next giveaway. Waiting 1 hour to get more Points"
+            new Date().toLocaleString() +
+              " - " +
+              "Not enough Points to enter the next giveaway. Waiting 1 hour to get more Points"
           );
           await new Promise((resolve) => setTimeout(resolve, 1000 * 60 * 60)); // 1 h
           this.getGames();
           break;
+        } else if (!isEntered) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * 2)); // 2 sec (request limit)
+          await this.enterGiveaway(
+            "https://www.steamgifts.com/ajax.php",
+            gameCode,
+            gameName
+          );
         }
-        await new Promise((resolve) => setTimeout(resolve, 1000 * 2)); // 2 sec
-        await this.enterGiveaway(
-          "https://www.steamgifts.com/ajax.php",
-          gameCode,
-          gameName
-        );
       }
 
-      console.log("List of games ended. Waiting 2 Minutes to continiue");
-      await new Promise((resolve) => setTimeout(resolve, 1000 * 60 * 2)); // 2 min
-      this.currentPage = this.currentPage + 1;
+      console.log("List of games ended. Waiting 10 Minutes to update");
+      await new Promise((resolve) => setTimeout(resolve, 1000 * 60 * 10)); // 10 min
+      // this.currentPage = this.currentPage + 1; // Not working propperly
       this.getGames();
     } catch (error) {
       throw error;
     }
   }
 
-  async enterGiveaway(url: string, gameCode: string, gameName: string) {
+  async enterGiveaway(
+    url: string,
+    gameCode: string,
+    gameName: string
+  ): Promise<void> {
     try {
       const payload = `xsrf_token=${this.xsrf_token}&do=entry_insert&code=${gameCode}`;
 
@@ -111,7 +126,12 @@ export class SteamgiftsBot {
 
       this.website.getPage(config).then((response: AxiosResponse) => {
         if (response.status === 200) {
-          console.log("> Entered giveaway: " + gameName);
+          console.log(
+            new Date().toLocaleString() +
+              " - " +
+              "Entering giveaway: " +
+              gameName
+          );
         } else {
           throw console.error(response.status + " - " + response.statusText);
         }
@@ -121,6 +141,3 @@ export class SteamgiftsBot {
     }
   }
 }
-
-// .giveaway__column--contributor-level--negative
-// .is-faded
