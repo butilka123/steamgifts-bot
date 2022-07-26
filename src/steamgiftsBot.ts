@@ -10,6 +10,8 @@ export class SteamgiftsBot {
 
   xsrf_token: string = "";
 
+  points: number = 0;
+
   headers = {
     Cookie: "PHPSESSID=" + fs.readFileSync("./src/cookie.txt", "utf-8"),
   };
@@ -48,7 +50,7 @@ export class SteamgiftsBot {
 
       const $ = cheerio.load(this.html);
       const gameList = $(".giveaway__row-inner-wrap");
-      const points: number = Number($(".nav__points").text());
+      this.points = Number($(".nav__points").text());
       this.xsrf_token = $('[name="xsrf_token"]').val();
 
       console.log(
@@ -78,7 +80,7 @@ export class SteamgiftsBot {
 
         const isEntered: boolean = $(game).hasClass("is-faded");
 
-        if (points - gameCost < 0 && !isEntered) {
+        if (this.points - gameCost < 0 && !isEntered) {
           await this.enterGiveaway;
 
           await new Promise((resolve) => setTimeout(resolve, 1000 * 2)); // Console log wrong for some reason
@@ -95,11 +97,13 @@ export class SteamgiftsBot {
           await this.enterGiveaway(
             "https://www.steamgifts.com/ajax.php",
             gameCode,
-            gameName
+            gameName,
+            gameCost
           );
         }
       }
 
+      await new Promise((resolve) => setTimeout(resolve, 1000 * 2)); // Console log wrong for some reason
       console.log("List of games ended. Waiting 10 Minutes to update");
       await new Promise((resolve) => setTimeout(resolve, 1000 * 60 * 10)); // 10 min
       // this.currentPage = this.currentPage + 1; // Not working propperly
@@ -112,7 +116,8 @@ export class SteamgiftsBot {
   async enterGiveaway(
     url: string,
     gameCode: string,
-    gameName: string
+    gameName: string,
+    gameCost: number
   ): Promise<void> {
     try {
       const payload = `xsrf_token=${this.xsrf_token}&do=entry_insert&code=${gameCode}`;
@@ -132,6 +137,7 @@ export class SteamgiftsBot {
               "Entering giveaway: " +
               gameName
           );
+          this.points = this.points - gameCost;
         } else {
           throw console.error(response.status + " - " + response.statusText);
         }
