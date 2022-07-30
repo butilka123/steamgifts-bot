@@ -1,7 +1,7 @@
 import { AxiosRequestConfig, AxiosResponse } from "axios";
 import cheerio from "cheerio";
 import * as fs from "fs";
-import { Website } from "../src/Website";
+import { Website } from "./Website";
 
 export class SteamgiftsBot {
   website = new Website();
@@ -13,7 +13,7 @@ export class SteamgiftsBot {
   points: number = 0;
 
   headers = {
-    Cookie: "PHPSESSID=" + fs.readFileSync("./src/cookie.txt", "utf-8"),
+    Cookie: "PHPSESSID=" + fs.readFileSync("./cookie.txt", "utf-8"),
   };
 
   html: string = "";
