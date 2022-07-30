@@ -1,3 +1,3 @@
-import { SteamgiftsBot } from "../src/SteamgiftsBot";
+import { SteamgiftsBot } from "./steamgiftsBot";
 
 new SteamgiftsBot();

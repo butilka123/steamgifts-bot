@@ -10,6 +10,7 @@ export class Website {
         return response;
       })
       .catch((error) => {
+        console.error("GET Request Page failed");
         throw error;
       });
   }
