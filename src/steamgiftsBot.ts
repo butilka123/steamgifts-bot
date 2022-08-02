@@ -52,6 +52,8 @@ export class SteamgiftsBot {
         "https://www.steamgifts.com/giveaways/search?page=" + this.currentPage
       );
 
+      // Extracting information from HTML
+
       const $ = cheerio.load(this.html);
       const gameList = $(".giveaway__row-inner-wrap");
       this.points = Number($(".nav__points").text());
@@ -79,6 +81,8 @@ export class SteamgiftsBot {
 
         const isEntered: boolean = $(game).hasClass("is-faded");
 
+        // Logic for entering giveaways
+
         if (this.points - gameCost < 0 && !isEntered) {
           this.writeLog(
             "Not enough Points to enter the next giveaway. Waiting 1 hour to get more Points"
@@ -101,6 +105,7 @@ export class SteamgiftsBot {
       this.writeLog("List of games ended. Waiting 10 Minutes to update");
 
       await this.wait(60 * 10); // 10 min
+
       // this.currentPage = this.currentPage + 1; // No logic defined
       this.getGames();
     } catch (error) {
@@ -145,7 +150,6 @@ export class SteamgiftsBot {
   }
 
   async wait(time: number): Promise<void> {
-    // Time in Seconds
-    return new Promise((resolve) => setTimeout(resolve, 1000 * time)); // 10 min
+    return new Promise((resolve) => setTimeout(resolve, 1000 * time)); // Time in seconds
   }
 }
