@@ -22,7 +22,7 @@ export class SteamgiftsBot {
     this.getGames();
   }
 
-  async getPage(websiteUrl) {
+  async getPage(websiteUrl): Promise<AxiosResponse> {
     try {
       const config: AxiosRequestConfig = {
         url: websiteUrl,
@@ -30,35 +30,36 @@ export class SteamgiftsBot {
         headers: this.headers,
       };
 
-      await this.website.getPage(config).then((response: AxiosResponse) => {
-        if (response.status === 200) {
-          this.html = response.data;
-        } else {
-          throw console.error(response.status + " - " + response.statusText);
-        }
-      });
+      return await this.website
+        .getPage(config)
+        .then((response: AxiosResponse) => {
+          if (response.status === 200) {
+            this.html = response.data;
+
+            return response;
+          } else {
+            throw console.error(response.status + " - " + response.statusText);
+          }
+        });
     } catch (error) {
       throw error;
     }
   }
 
-  async getGames() {
+  async getGames(): Promise<void> {
     try {
       await this.getPage(
         "https://www.steamgifts.com/giveaways/search?page=" + this.currentPage
       );
+
+      // Extracting information from HTML
 
       const $ = cheerio.load(this.html);
       const gameList = $(".giveaway__row-inner-wrap");
       this.points = Number($(".nav__points").text());
       this.xsrf_token = $('[name="xsrf_token"]').val();
 
-      console.log(
-        new Date().toLocaleString() +
-          " - " +
-          "Processing games from Page " +
-          this.currentPage
-      );
+      this.writeLog("Processing games from Page " + this.currentPage);
 
       for (let game of gameList) {
         const gameCost: number = Number(
@@ -80,20 +81,21 @@ export class SteamgiftsBot {
 
         const isEntered: boolean = $(game).hasClass("is-faded");
 
-        if (this.points - gameCost < 0 && !isEntered) {
-          await this.enterGiveaway;
+        // Logic for entering giveaways
 
-          await new Promise((resolve) => setTimeout(resolve, 1000 * 2)); // Console log wrong for some reason
-          console.log(
-            new Date().toLocaleString() +
-              " - " +
-              "Not enough Points to enter the next giveaway. Waiting 1 hour to get more Points"
+        if (this.points - gameCost < 0 && !isEntered) {
+          this.writeLog(
+            "Not enough Points to enter the next giveaway. Waiting 1 hour to get more Points"
           );
-          await new Promise((resolve) => setTimeout(resolve, 1000 * 60 * 60)); // 1 h
+
+          await this.wait(60 * 60); // 1 h
+
+          // Stopping function and reentering
           this.getGames();
-          break;
+          return;
         } else if (!isEntered) {
-          await new Promise((resolve) => setTimeout(resolve, 1000 * 2)); // 2 sec (request limit)
+          await this.wait(2); // 2 sec (request limit)
+
           await this.enterGiveaway(
             "https://www.steamgifts.com/ajax.php",
             gameCode,
@@ -103,10 +105,11 @@ export class SteamgiftsBot {
         }
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 1000 * 2)); // Console log wrong for some reason
-      console.log("List of games ended. Waiting 10 Minutes to update");
-      await new Promise((resolve) => setTimeout(resolve, 1000 * 60 * 10)); // 10 min
-      // this.currentPage = this.currentPage + 1; // Not working propperly
+      this.writeLog("List of games ended. Waiting 10 Minutes to update");
+
+      await this.wait(60 * 10); // 10 min
+
+      // this.currentPage = this.currentPage + 1; // No logic defined
       this.getGames();
     } catch (error) {
       throw error;
@@ -118,7 +121,7 @@ export class SteamgiftsBot {
     gameCode: string,
     gameName: string,
     gameCost: number
-  ): Promise<void> {
+  ): Promise<AxiosResponse> {
     try {
       const payload = `xsrf_token=${this.xsrf_token}&do=entry_insert&code=${gameCode}`;
 
@@ -129,15 +132,12 @@ export class SteamgiftsBot {
         data: payload,
       };
 
-      this.website.getPage(config).then((response: AxiosResponse) => {
+      return this.website.getPage(config).then((response: AxiosResponse) => {
         if (response.status === 200) {
-          console.log(
-            new Date().toLocaleString() +
-              " - " +
-              "Entering giveaway: " +
-              gameName
-          );
+          this.writeLog("Entering giveaway: " + gameName);
           this.points = this.points - gameCost;
+
+          return response;
         } else {
           throw console.error(response.status + " - " + response.statusText);
         }
@@ -145,5 +145,24 @@ export class SteamgiftsBot {
     } catch (error) {
       throw error;
     }
+  }
+
+  writeLog(text: string): void {
+    const log =
+      new Date().toLocaleString(undefined, {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit", // All of this options to allways have same time log length
+      }) +
+      " - " +
+      text;
+    console.log(log);
+  }
+
+  async wait(time: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, 1000 * time)); // Time in seconds
   }
 }
