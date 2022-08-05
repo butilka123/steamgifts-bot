@@ -89,7 +89,10 @@ export class SteamgiftsBot {
           );
 
           await this.wait(60 * 60); // 1 h
-          break; // Making sure to check new games that may have appeared
+
+          // Stopping function and reentering
+          this.getGames();
+          return;
         } else if (!isEntered) {
           await this.wait(2); // 2 sec (request limit)
 
@@ -145,7 +148,17 @@ export class SteamgiftsBot {
   }
 
   writeLog(text: string): void {
-    const log = new Date().toLocaleString() + " - " + text;
+    const log =
+      new Date().toLocaleString(undefined, {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit", // All of this options to allways have same time log length
+      }) +
+      " - " +
+      text;
     console.log(log);
   }
 
