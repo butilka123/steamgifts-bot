@@ -2,6 +2,7 @@ import { AxiosRequestConfig, AxiosResponse } from "axios";
 import cheerio from "cheerio";
 import * as fs from "fs";
 import { Website } from "./Website";
+import path from "path";
 
 export class SteamgiftsBot {
 	website = new Website();
@@ -13,7 +14,9 @@ export class SteamgiftsBot {
 	points: number = 0;
 
 	headers = {
-		Cookie: `PHPSESSID=\${fs.readFileSync("cookie.txt", "utf-8")}`,
+		Cookie: `PHPSESSID=${fs.readFileSync(
+			path.resolve(__dirname, "./cookie.txt"),
+		)}`,
 	};
 
 	html: string = "";
@@ -54,11 +57,13 @@ export class SteamgiftsBot {
 
 			// Extracting information from HTML
 
+			console.log(this.headers);
+
 			const $ = cheerio.load(this.html);
 			const gameList = $(".giveaway__row-inner-wrap");
 			this.points = Number($(".nav__points").text());
 
-			console.log(this.points);
+			console.log(Number($(".nav__points").text()));
 
 			this.xsrf_token = $('[name="xsrf_token"]').val();
 
