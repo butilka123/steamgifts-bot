@@ -13,7 +13,7 @@ export class SteamgiftsBot {
 	points: number = 0;
 
 	headers = {
-		Cookie: `PHPSESSID=${fs.readFileSync("./cookie.txt", "utf-8")}`,
+		Cookie: `PHPSESSID=\${fs.readFileSync("cookie.txt", "utf-8")}`,
 	};
 
 	html: string = "";
@@ -57,6 +57,9 @@ export class SteamgiftsBot {
 			const $ = cheerio.load(this.html);
 			const gameList = $(".giveaway__row-inner-wrap");
 			this.points = Number($(".nav__points").text());
+
+			console.log(this.points);
+
 			this.xsrf_token = $('[name="xsrf_token"]').val();
 
 			this.writeLog(`Processing games from Page ${this.currentPage}`);
@@ -162,4 +165,6 @@ export class SteamgiftsBot {
 	async wait(time: number): Promise<void> {
 		return new Promise((resolve) => setTimeout(resolve, 1000 * time)); // Time in seconds
 	}
+
+	checkSession() {}
 }
